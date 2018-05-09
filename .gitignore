@@ -75,6 +75,10 @@ dist
 types
 **/bundle.js
 
+## Rebase/merge backup
+*.orig
+
 cordova-example
 
 docs/api/**
+
