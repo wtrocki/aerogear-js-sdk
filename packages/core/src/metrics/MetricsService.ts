@@ -1,10 +1,10 @@
 import console from "loglevel";
 import uuid from "uuid/v1";
-import { AeroGearConfiguration, ConfigurationHelper, ServiceConfiguration } from "../configuration";
+import { AeroGearConfiguration, ServiceConfiguration } from "../config";
+import { isMobileCordova } from "../platform/PlatformUtils";
 import { Metrics, MetricsPayload } from "./model";
 import { CordovaAppMetrics } from "./platform/CordovaAppMetrics";
 import { CordovaDeviceMetrics } from "./platform/CordovaDeviceMetrics";
-import { isMobileCordova } from "./platform/PlatformUtils";
 import { MetricsPublisher, NetworkMetricsPublisher } from "./publisher";
 declare var window: any;
 

@@ -1,17 +1,20 @@
+
 import find from "lodash.find";
-import { AeroGearConfiguration, ServiceConfiguration } from "./";
+import { AeroGearConfiguration, ServiceConfiguration } from "./config";
+import { configReader } from "./platform";
 
 /**
- * Helper class to read service configurations from a mobile-services.json file
+ * AeroGear services core instance
  */
-export class ConfigurationHelper {
+export class AgsCore {
 
   protected readonly configurations: ServiceConfiguration[];
 
   /**
    * @param config - top level configuration that will be send from server.
    */
-  constructor(config: AeroGearConfiguration) {
+  constructor(name: string = "mobile-config.json") {
+    const config = configReader(name);
     this.configurations = config.services || [];
   }
 
@@ -32,3 +35,5 @@ export class ConfigurationHelper {
   }
 
 }
+
+export let core = new AgsCore();
