@@ -1,4 +1,4 @@
-import { coreInstance, ServiceConfiguration } from "@aerogear/core";
+import { AgsCore, coreInstance, ServiceConfiguration } from "@aerogear/core";
 import Keycloak from "keycloak-js";
 import { KeycloakError, KeycloakInitOptions, KeycloakInstance, KeycloakProfile, KeycloakPromise } from "keycloak-js";
 import console from "loglevel";
@@ -11,18 +11,20 @@ export class Auth {
 
   public static readonly TYPE: string = "keycloak";
 
-  private auth: KeycloakInstance;
+  private auth?: KeycloakInstance;
   private internalConfig: any;
 
-  constructor() {
-    const configuration = coreInstance.getConfigByType(Auth.TYPE);
-    if (!configuration || configuration.length === 0) {
-      console.warn("Keycloak configuration is missing. Authentication will not work properly.");
-      this.internalConfig = {};
-    } else {
-      this.internalConfig = configuration[0].config;
-    }
-    this.auth = Keycloak(this.internalConfig);
+  constructor(core: AgsCore) {
+    core.onConfigAvailable(() => {
+      const configuration = core.getConfigByType(Auth.TYPE);
+      if (!configuration || configuration.length === 0) {
+        console.warn("Keycloak configuration is missing. Authentication will not work properly.");
+        this.internalConfig = {};
+      } else {
+        this.internalConfig = configuration[0].config;
+      }
+      this.auth = Keycloak(this.internalConfig);
+    });
   }
 
   /**
@@ -34,7 +36,11 @@ export class Auth {
     if (!initOptions.onLoad) {
       initOptions.onLoad = "check-sso";
     }
+
     return new Promise((resolve, reject) => {
+      if (!this.auth) {
+        return reject("SDK is not configured properly");
+      }
       return this.auth.init(initOptions).error(reject).success(resolve);
     });
   }
@@ -45,6 +51,9 @@ export class Auth {
    */
   public loadUserProfile(): Promise<KeycloakProfile> {
     return new Promise((resolve, reject) => {
+      if (!this.auth) {
+        return reject("Auth SDK is not configured");
+      }
       return this.auth.loadUserProfile().error(reject).success(resolve);
     });
   }
@@ -55,6 +64,9 @@ export class Auth {
    */
   public login(): Promise<void> {
     return new Promise((resolve, reject) => {
+      if (!this.auth) {
+        return reject("Auth SDK is not configured");
+      }
       return this.auth.login().error(reject).success(resolve);
     });
   }
@@ -66,18 +78,24 @@ export class Auth {
    */
   public logout(): Promise<void> {
     return new Promise((resolve, reject) => {
+      if (!this.auth) {
+        return reject("Auth SDK is not configured");
+      }
       return this.auth.logout().error(reject).success(resolve);
     });
   }
 
   public isAuthenticated(): boolean {
+    if (!this.auth) {
+      return false;
+    }
     return !!this.auth.authenticated;
   }
 
   /**
    * Get access to wrapped Keycloak object
    */
-  public extract(): KeycloakInstance {
+  public extract(): KeycloakInstance | undefined {
     return this.auth;
   }
 
@@ -85,6 +103,9 @@ export class Auth {
    * Check it the user has a specified realm role
    */
   public hasRealmRole(role: string): boolean {
+    if (!this.auth) {
+      return false;
+    }
     return this.auth.hasRealmRole(role);
   }
 
@@ -92,7 +113,7 @@ export class Auth {
    * Return the users realm level roles
    */
   public getRealmRoles(): string[] {
-    if (this.auth.realmAccess && this.auth.realmAccess.roles) {
+    if (this.auth && this.auth.realmAccess && this.auth.realmAccess.roles) {
       return this.auth.realmAccess.roles;
     }
     return [];
@@ -104,3 +125,5 @@ export class Auth {
     return this.internalConfig;
   }
 }
+
+export const auth = new Auth(coreInstance);
