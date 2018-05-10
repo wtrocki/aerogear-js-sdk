@@ -6,6 +6,6 @@ import { AeroGearConfiguration, coreInstance } from "@aerogear/core";
  *
  * @param config object containing SDK. Object can be read from file or pasted directly in source code.
  */
-export const init = (config: AeroGearConfiguration): Promise<void> => {
-  return coreInstance.init(config);
+export const init = (config: AeroGearConfiguration): void => {
+  coreInstance.init(config);
 };
